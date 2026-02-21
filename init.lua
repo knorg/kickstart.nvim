@@ -181,7 +181,7 @@ vim.diagnostic.config {
 
   -- Can switch between these as you prefer
   virtual_text = true, -- Text shows up at the end of the line
-  virtual_lines = false, -- Teest shows up underneath the line, with virtual lines
+  virtual_lines = false, -- Text shows up underneath the line, with virtual lines
 
   -- Auto open the float, so you can easily read the errors when jumping with `[d` and `]d`
   jump = { float = true },
@@ -335,6 +335,7 @@ require('lazy').setup({
         { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
         { '<leader>t', group = '[T]oggle' },
         { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
+        { '<leader>g', group = '[G]it' },
       },
     },
   },
@@ -661,7 +662,7 @@ require('lazy').setup({
       end
 
       -- Special Lua Config, as recommended by neovim help docs
-      vim.lsp.config('`lua_ls', {
+      vim.lsp.config('lua_ls', {
         on_init = function(client)
           if client.workspace_folders then
             local path = client.workspace_folders[1].name
@@ -878,7 +879,10 @@ require('lazy').setup({
       end, { desc = 'Toggle file [E]xplorer' })
 
       -- Operators (evaluate, replace, exchange, multiply, sort)
-      require('mini.operators').setup()
+      require('mini.operators').setup {
+        exchange = { prefix = 'ge' },
+        replace = { prefix = 'gR' },
+      }
 
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
