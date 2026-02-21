@@ -239,7 +239,7 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
   if vim.v.shell_error ~= 0 then error('Error cloning lazy.nvim:\n' .. out) end
 end
 
----@type vim.Option
+--@type vim.Option
 local rtp = vim.opt.rtp
 rtp:prepend(lazypath)
 
@@ -284,6 +284,28 @@ require('lazy').setup({
         changedelete = { text = '~' },
       },
     },
+  },
+
+  {
+    'NeogitOrg/neogit',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'sindrets/diffview.nvim',
+      'nvim-telescope/telescope.nvim',
+    },
+    config = function()
+      require('neogit').setup {
+        integrations = {
+          telescope = true,
+          diffview = true,
+        },
+      }
+      vim.keymap.set('n', '<leader>gg', function() require('neogit').open() end, { desc = 'Neo[G]it open' })
+      vim.keymap.set('n', '<leader>gc', function() require('neogit').open { 'commit' } end, { desc = '[G]it [C]ommit' })
+      vim.keymap.set('n', '<leader>gp', function() require('neogit').open { 'push' } end, { desc = '[G]it [P]ush' })
+      vim.keymap.set('n', '<leader>gl', function() require('neogit').open { 'pull' } end, { desc = '[G]it Pul[L]' })
+      vim.keymap.set('n', '<leader>gb', function() require('neogit').open { 'branch' } end, { desc = '[G]it [B]ranch' })
+    end,
   },
 
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
@@ -381,11 +403,22 @@ require('lazy').setup({
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
-        -- defaults = {
-        --   mappings = {
-        --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-        --   },
-        -- },
+        defaults = {
+          sorting_strategy = 'ascending',
+          layout_strategy = 'bottom_pane',
+          layout_config = {
+            height = 0.4,
+            prompt_position = 'top',
+            bottom_pane = {
+              preview_width = 0.5,
+            },
+          },
+          border = true,
+          previewer = true,
+          mappings = {
+            i = { ['<c-enter>'] = 'to_fuzzy_refine' },
+          },
+        },
         -- pickers = {}
         extensions = {
           ['ui-select'] = { require('telescope.themes').get_dropdown() },
@@ -614,7 +647,7 @@ require('lazy').setup({
       -- You can press `g?` for help in this menu.
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
-        'lua_ls', -- Lua Language server
+        'lua-language-server', -- Lua Language server
         'stylua', -- Used to format Lua code
         -- You can add other tools here that you want Mason to install
       })
@@ -628,7 +661,7 @@ require('lazy').setup({
       end
 
       -- Special Lua Config, as recommended by neovim help docs
-      vim.lsp.config('lua_ls', {
+      vim.lsp.config('`lua_ls', {
         on_init = function(client)
           if client.workspace_folders then
             local path = client.workspace_folders[1].name
@@ -715,18 +748,16 @@ require('lazy').setup({
           -- `friendly-snippets` contains a variety of premade snippets.
           --    See the README about individual language/framework/plugin snippets:
           --    https://github.com/rafamadriz/friendly-snippets
-          -- {
-          --   'rafamadriz/friendly-snippets',
-          --   config = function()
-          --     require('luasnip.loaders.from_vscode').lazy_load()
-          --   end,
-          -- },
+          {
+            'rafamadriz/friendly-snippets',
+            config = function() require('luasnip.loaders.from_vscode').lazy_load() end,
+          },
         },
         opts = {},
       },
     },
-    --- @module 'blink.cmp'
-    --- @type blink.cmp.Config
+    -- @module 'blink.cmp'
+    -- @type blink.cmp.Config
     opts = {
       keymap = {
         -- 'default' (recommended) for mappings similar to built-in completions
@@ -750,7 +781,7 @@ require('lazy').setup({
         -- <c-k>: Toggle signature help
         --
         -- See :h blink-cmp-config-keymap for defining your own keymap
-        preset = 'default',
+        preset = 'enter', -- 'default',
 
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
@@ -765,7 +796,7 @@ require('lazy').setup({
       completion = {
         -- By default, you may press `<c-space>` to show the documentation.
         -- Optionally, set `auto_show = true` to show the documentation after a delay.
-        documentation = { auto_show = false, auto_show_delay_ms = 500 },
+        documentation = { auto_show = true, auto_show_delay_ms = 200 },
       },
 
       sources = {
@@ -781,7 +812,7 @@ require('lazy').setup({
       -- the rust implementation via `'prefer_rust_with_warning'`
       --
       -- See :h blink-cmp-config-fuzzy for more information
-      fuzzy = { implementation = 'lua' },
+      fuzzy = { implementation = 'prefer_rust_with_warning' },
 
       -- Shows a signature help window while you type arguments for a function
       signature = { enabled = true },
@@ -830,6 +861,24 @@ require('lazy').setup({
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
       require('mini.surround').setup()
+
+      -- File explorer
+      require('mini.files').setup {
+        -- Customize windows
+        windows = {
+          preview = true,
+          width_preview = 40,
+        },
+        mappings = {
+          go_in_plus = '<CR>',
+        },
+      }
+      vim.keymap.set('n', '<leader>e', function()
+        if not MiniFiles.close() then MiniFiles.open(vim.api.nvim_buf_get_name(0)) end
+      end, { desc = 'Toggle file [E]xplorer' })
+
+      -- Operators (evaluate, replace, exchange, multiply, sort)
+      require('mini.operators').setup()
 
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
@@ -890,7 +939,7 @@ require('lazy').setup({
 }, {
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
-    -- default lazy.nvim defined Nerd Font icons, otherwise define a unicode icons table
+    -- default lazy.nvim defined Nerd Font icoss, otherwise define a unicode icons table
     icons = vim.g.have_nerd_font and {} or {
       cmd = '⌘',
       config = '🛠',
